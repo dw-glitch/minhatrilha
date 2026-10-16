@@ -8,7 +8,9 @@
   <title>Minha Trilha | Qualidade + Tecnologia</title>
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="curriculo.css">
   <script defer src="script.js"></script>
+  <script defer src="curriculo.js"></script>
 </head>
 <body>
   <a class="skip-link" href="#conteudo">Pular para o conteúdo</a>
@@ -25,8 +27,9 @@
         <a href="#rotina">Rotina</a>
         <a href="#orcamento">Investimento</a>
         <a href="#cursos">Cursos e links</a>
+        <a href="#checklist">Checklist &amp; Currículo</a>
       </nav>
-      <a class="header-cta" href="#checklist"><span class="status-dot"></span> Meu progresso <span aria-hidden="true">↗</span></a>
+      <a class="header-cta" href="#checklist"><span class="status-dot"></span> Meu currículo <span aria-hidden="true">↗</span></a>
     </div>
   </header>
 
@@ -100,7 +103,67 @@
       <article class="course-card" data-kind="paid"><div class="course-head"><span class="course-logo microsoft">M</span><span class="course-price">EXAME PAGO</span></div><div class="course-origin">MICROSOFT CERTIFIED</div><h3>Certificação PL-300</h3><p>Exame oficial de Power BI. Prepare-se gratuitamente e pague apenas quando estiver pronto.</p><a href="https://learn.microsoft.com/pt-br/credentials/certifications/data-analyst-associate/" target="_blank" rel="noopener noreferrer" class="course-link">Página oficial do exame <span>↗</span></a></article>
     </div></div></section>
 
-    <section class="section progress-section" id="checklist" aria-labelledby="progressTitle"><div class="wrap progress-grid"><div class="progress-copy"><span class="section-kicker light">SEU CONTROLE PESSOAL</span><h2 id="progressTitle">Transforme o plano em <em>progresso real.</em></h2><p>Marque as etapas concluídas. Suas marcações ficam salvas somente neste navegador, neste dispositivo.</p><div class="progress-meter"><div><strong id="progressPercent">0%</strong><span>do checklist concluído</span></div><div class="progress-track"><span id="progressBar"></span></div><small id="progressCount">0 de 9 etapas</small></div><button type="button" class="btn btn-glass-light" id="printPlan">Imprimir ou salvar em PDF ↗</button></div><div class="checklist-card"><div class="checklist-head"><strong>Meu checklist</strong><span id="checklistState">0 concluídas</span></div><div id="checklistItems" class="checklist-items"><!-- Injetado localmente pelo script --></div><div class="checklist-bottom"><button type="button" id="resetChecklist" class="reset-btn">↺ Reiniciar marcações</button><span>Salvo no seu navegador</span></div></div></div></section>
+
+    <section class="section progress-section career-section" id="checklist" aria-labelledby="progressTitle">
+      <div class="wrap">
+        <div class="career-heading">
+          <div><span class="section-kicker light">NOVA ABA · SUA EVOLUÇÃO PROFISSIONAL</span>
+            <h2 id="progressTitle">Meu checklist &amp; <em>currículo ao vivo.</em></h2>
+            <p>Conclua suas formações, marque uma a uma e veja imediatamente como seu currículo ficará. Só aparecem como concluídos os itens que você marcar.</p>
+          </div>
+          <div class="career-progress"><strong id="progressPercent">0%</strong><div class="progress-track"><span id="progressBar"></span></div><small id="progressCount">0 etapas concluídas</small></div>
+        </div>
+        <div class="career-workspace" id="curriculo">
+          <div class="checklist-card career-checklist">
+            <div class="checklist-head"><strong>Marcar minhas conquistas</strong><span id="checklistState">0 concluídas</span></div>
+            <p class="career-hint">Marque somente quando a matrícula ou conclusão acontecer de fato. O currículo acompanha as marcações automaticamente.</p>
+            <div id="checklistItems" class="checklist-items"></div>
+            <div class="checklist-bottom"><button type="button" id="resetChecklist" class="reset-btn">↺ Reiniciar marcações</button><span>Dados só neste navegador</span></div>
+          </div>
+          <div class="career-preview-box">
+            <div class="career-preview-header">
+              <div><span class="eyebrow">RESULTADO DO CHECKLIST</span><h3>Meu currículo atualizado</h3><p>Prévia profissional para você copiar e usar em seu currículo real.</p></div>
+              <span class="career-live"><span aria-hidden="true"></span> Atualização automática</span>
+            </div>
+            <div class="career-tabbar" role="tablist" aria-label="Visualização do currículo">
+              <button type="button" role="tab" id="cvTabPreview" aria-controls="cvPanelPreview" aria-selected="true" class="career-tab is-active">Prévia do currículo</button>
+              <button type="button" role="tab" id="cvTabEdit" aria-controls="cvPanelEdit" aria-selected="false" class="career-tab">Personalizar meus dados</button>
+            </div>
+            <div role="tabpanel" id="cvPanelPreview" aria-labelledby="cvTabPreview" class="career-panel">
+              <div id="cvPreview" class="cv-sheet" aria-live="polite" aria-atomic="true"></div>
+              <div class="career-actions">
+                <button type="button" class="cv-action primary" id="cvCopy">Copiar currículo</button>
+                <button type="button" class="cv-action" id="cvDownload">Baixar texto (.txt)</button>
+                <button type="button" class="cv-action" id="cvPrint">Salvar em PDF / Imprimir</button>
+              </div>
+              <p id="cvFeedback" role="status" aria-live="polite" class="career-feedback"></p>
+            </div>
+            <div role="tabpanel" id="cvPanelEdit" aria-labelledby="cvTabEdit" class="career-panel" hidden>
+              <form id="cvProfileForm" class="cv-form">
+                <div class="cv-fields">
+                  <label>Nome completo<input name="fullName" autocomplete="name" maxlength="100" placeholder="Digite seu nome"></label>
+                  <label>Cidade e estado<input name="location" maxlength="100" placeholder="Ex.: Recife, PE"></label>
+                  <label>E-mail profissional<input name="email" type="email" autocomplete="email" maxlength="160" placeholder="Seu e-mail"></label>
+                  <label>Telefone (opcional)<input name="phone" autocomplete="tel" maxlength="35" placeholder="(DDD) número"></label>
+                  <label class="field-wide">Cargo ou objetivo profissional<input name="headline" maxlength="160" value="Qualidade | Processos | Transformação Digital"></label>
+                  <label>Faculdade da graduação em ADS<input name="adsSchool" maxlength="130" placeholder="Instituição da sua graduação"></label>
+                  <label>Ano de conclusão de ADS<input name="adsYear" inputmode="numeric" maxlength="4" placeholder="Ex.: 2024"></label>
+                  <label>Instituição da pós<input name="postSchool" maxlength="130" value="PUC Minas"></label>
+                  <label>Instituição do curso de Auditor Interno<input name="auditorSchool" maxlength="130" placeholder="Ex.: Target-Q ou Bureau Veritas"></label>
+                  <label>Instituição do Green Belt<input name="greenSchool" maxlength="130" value="FM2S"></label>
+                  <label class="field-wide">LinkedIn ou portfólio<input name="portfolio" maxlength="200" placeholder="linkedin.com/in/... ou portfólio"></label>
+                  <label class="field-wide">Resumo profissional<textarea name="summary" rows="4" maxlength="1300">Profissional com formação em Análise e Desenvolvimento de Sistemas e experiência em controle documental e rotinas da Qualidade Industrial, com interesse em melhoria contínua, análise de dados e transformação digital.</textarea></label>
+                  <label class="field-wide">Experiência e projetos (uma linha por realização)<textarea name="experience" rows="5" maxlength="2200" placeholder="Ex.: Controle e conferência de documentos técnicos&#10;Ex.: Desenvolvimento de solução para rastreabilidade documental"></textarea></label>
+                </div>
+                <p class="form-note">Os campos são opcionais, salvos apenas no navegador. Nenhuma informação pessoal é enviada ao GitHub ou à Vercel por este recurso.</p>
+                <button type="button" class="cv-action primary" id="cvBack">Ver currículo atualizado →</button>
+              </form>
+            </div>
+            <p class="career-disclaimer">A pós só aparece como <strong>em andamento</strong> após você marcar a matrícula; formações e certificações aparecem como concluídas apenas após a marcação correspondente. Antes de compartilhar, revise as informações e os certificados reais.</p>
+          </div>
+        </div>
+      </div>
+    </section>
 
     <section class="section faq-section" aria-labelledby="faqTitle"><div class="wrap faq-grid"><div><span class="section-kicker">ANTES DE SE MATRICULAR</span><h2 class="section-title" id="faqTitle">Dúvidas importantes, <em>respostas diretas.</em></h2><p class="section-lead">Um bom currículo depende de formações pertinentes e experiência demonstrável, não da quantidade de cursos realizados.</p></div><div class="accordion">
       <details open><summary>Por que começar pela pós-graduação?<span aria-hidden="true">+</span></summary><p>Você já tem graduação em ADS e experiência em Qualidade. A pós ajuda a acrescentar uma titulação formal de especialista e pode ser listada como “em andamento” após a matrícula efetiva. Os cursos gratuitos complementam a prática enquanto você paga a especialização.</p></details>

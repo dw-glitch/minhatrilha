@@ -12,7 +12,8 @@
     {id:'power-automate',label:'Concluir introdução ao Power Automate',meta:'Durante 2027 · Microsoft Learn'},
     {id:'puc-finish',label:'Concluir a pós-graduação',meta:'Meta projetada: até abril de 2028, se iniciada em nov/2026'},
     {id:'auditor',label:'Concluir formação de Auditor Interno',meta:'Meta: novembro/2028 a fevereiro/2029'},
-    {id:'green-belt',label:'Concluir Lean Six Sigma Green Belt',meta:'Meta: março a agosto de 2029'}
+    {id:'green-belt',label:'Concluir Lean Six Sigma Green Belt',meta:'Meta: março a agosto de 2029'},
+    {id:'pl-300',label:'Ser aprovado no exame oficial Microsoft PL-300',meta:'Certificação profissional somente após aprovação na prova'}
   ];
   function readStorage(){
     try { const v=JSON.parse(localStorage.getItem(storageKey)||'{}'); return v&&typeof v==='object'?v:{}; }
