@@ -1,7 +1,7 @@
 'use strict';
 (() => {
   const $ = id => document.getElementById(id);
-  const key = 'minha-trilha-qt-v1', pk = 'minha-trilha-qt-cv-v1';
+  const key = 'minha-trilha-qt-v1', pk = 'minha-trilha-qt-cv-v1', ck = 'minha-trilha-qt-custom-courses-v1';
   const get = k => { try { const v=JSON.parse(localStorage.getItem(k)||'{}'); return v && typeof v === 'object' ? v : {}; } catch { return {}; } };
   const put = (k,v) => { try {localStorage.setItem(k,JSON.stringify(v));} catch {} };
   const esc = v => String(v??'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -35,49 +35,110 @@
   ];
   const defaults = {
     name:'',location:'',email:'',phone:'',headline:'Qualidade | Processos | Transformação Digital',
-    adsSchool:'',adsYear:'',postSchool:'PUC Minas',auditorSchool:'',greenSchool:'FM2S',portfolio:'',
+    adsDegree:'Tecnólogo em Análise e Desenvolvimento de Sistemas',adsSchool:'',adsYear:'',postDegree:'Pós-graduação em Gestão da Qualidade, Controle e Auditoria',postSchool:'PUC Minas',auditorSchool:'',greenSchool:'FM2S',portfolio:'',
     summary:'Profissional formado em Análise e Desenvolvimento de Sistemas, com experiência em controle documental e rotinas da Qualidade Industrial e interesse em análise de dados, melhoria contínua e transformação digital.',
-    experience:''
+    experience:'',manualEducation:'',skills:'',languages:'',manualCertifications:'',extrasTitle:'',extras:''
   };
   const old = get(pk);
   let profile = {...defaults,...old,name:old.name||old.fullName||''};
   let checked = new Set((Array.isArray(get(key).completed)?get(key).completed:[]).filter(x=>typeof x==='string'));
   const done = id => checked.has(id);
+  const builtInLabels = [
+    ['enap-finish','Análise e Melhoria de Processos'],
+    ['power-bi','Power BI e Power Query'],
+    ['power-automate','Power Automate'],
+    ['auditor','Formação de Auditor Interno'],
+    ['green-belt','Lean Six Sigma Green Belt'],
+    ['pl-300','Certificação Microsoft PL-300']
+  ];
+  const sanitizeCourse = o => {
+    if(!o || typeof o !== 'object' || typeof o.id !== 'string' || typeof o.title !== 'string' || !o.title.trim())return null;
+    const clean = k => typeof o[k] === 'string' ? o[k].slice(0,k==='cvText'?850:500) : '';
+    return {id:o.id.slice(0,110),title:clean('title'),institution:clean('institution'),category:['course','education','certification'].includes(o.category)?o.category:'course',when:clean('when'),hours:clean('hours'),year:clean('year'),cost:clean('cost'),url:clean('url'),cvText:clean('cvText')};
+  };
+  let customCourses = (Array.isArray(get(ck).courses)?get(ck).courses:[]).map(sanitizeCourse).filter(Boolean);
+  const saveCourses = () => put(ck,{courses:customCourses});
+  const safeHref = u => {try { const url = new URL(u);return ['http:','https:'].includes(url.protocol)?url.href:''; }catch{return '';} };
+  function builtInDefaultText(id) {
+    const map={
+      'enap-finish':'Análise e Melhoria de Processos — ENAP (curso concluído)',
+      'power-bi':'Power BI e Power Query — Microsoft Learn (trilha de estudos concluída)',
+      'power-automate':'Power Automate — Microsoft Learn (trilha de estudos concluída)',
+      'auditor':'Formação de Auditor Interno — '+(profile.auditorSchool.trim()||'Instituição a informar')+' (curso concluído)',
+      'green-belt':'Lean Six Sigma Green Belt — '+(profile.greenSchool.trim()||'Instituição a informar')+' (formação concluída)',
+      'pl-300':'Microsoft Certified: Power BI Data Analyst Associate (PL-300) — exame aprovado'
+    };
+    return map[id]||'';
+  }
+  function courseText(id,base) {
+    const t = profile.courseTexts;
+    return t && Object.prototype.hasOwnProperty.call(t,id) && typeof t[id]==='string' ? t[id].trim() : base;
+  }
+  function customCvText(c) {
+    if(c.cvText.trim())return c.cvText.trim();
+    const attrs=[c.hours.trim(),c.year.trim()].filter(Boolean);
+    return c.title.trim()+(c.institution.trim()?' — '+c.institution.trim():'')+(attrs.length?' ('+attrs.join(' · ')+')':'');
+  }
   let copyText = '';
   function paintTimeline() {
-    $('timelineList').innerHTML = timeline.map((r,i) => {
+    const originals=timeline.map((r,i) => {
       const [when,detail,title,school,cost,path,link,id,started] = r;
       const badge = done(id)?'<span class="done-pill">✓ Concluído</span>':(started&&done(started)?'<span class="done-pill">Em andamento</span>':'');
       return '<article class="timeline-item"><div class="timeline-when"><span class="step-num">'+(i+1)+'</span><span class="timeline-date">'+esc(when)+'<small>'+esc(detail)+'</small></span></div><div class="timeline-course"><strong>'+esc(title)+' '+badge+'</strong><span class="meta">'+esc(school)+'</span></div><div class="timeline-cost'+(cost==='Gratuito'?' zero':'')+'">'+esc(cost)+'</div><div class="timeline-link"><a href="'+links[path]+'" target="_blank" rel="noopener noreferrer" aria-label="'+esc(link+' — '+title)+'">'+esc(link)+' ↗</a></div></article>';
-    }).join('');
+    });
+    const added=customCourses.map((c,i) => {
+      const badge=done(c.id)?'<span class="done-pill">✓ Concluído</span>':'';
+      const url=safeHref(c.url);
+      return '<article class="timeline-item"><div class="timeline-when"><span class="step-num">'+(timeline.length+i+1)+'</span><span class="timeline-date">'+esc(c.when||'A definir')+'<small>Curso adicionado</small></span></div><div class="timeline-course"><strong>'+esc(c.title)+' '+badge+'</strong><span class="meta">'+esc(c.institution||'Instituição a informar')+(c.hours?' · '+esc(c.hours):'')+'</span></div><div class="timeline-cost">'+esc(c.cost||'—')+'</div><div class="timeline-link">'+(url?'<a href="'+esc(url)+'" target="_blank" rel="noopener noreferrer">Acessar ↗</a>':'<span class="muted-link">Sem link</span>')+'</div></article>';
+    });
+    $('timelineList').innerHTML=[...originals,...added].join('');
   }
   function paintChecklist() {
-    $('checkItems').innerHTML = items.map(([id,title,desc]) => '<label class="check-item"><input type="checkbox" data-check-id="'+id+'"'+(done(id)?' checked':'')+' aria-label="'+esc(title)+'"><span class="check-copy"><strong>'+esc(title)+'</strong><small>'+esc(desc)+'</small></span>'+(done(id)?'<span class="done-pill">Feito</span>':'')+'</label>').join('');
-    const n=items.filter(i=>done(i[0])).length;
-    $('headCount').textContent=n+' de '+items.length;
-    $('headBar').style.width=(n/items.length*100)+'%';
-    $('tabCount').textContent=n+'/'+items.length;
-    $('checkPercent').textContent=Math.round(n/items.length*100)+'%';
+    const base=items.map(([id,title,desc]) => '<label class="check-item"><input type="checkbox" data-check-id="'+esc(id)+'"'+(done(id)?' checked':'')+' aria-label="'+esc(title)+'"><span class="check-copy"><strong>'+esc(title)+'</strong><small>'+esc(desc)+'</small></span>'+(done(id)?'<span class="done-pill">Feito</span>':'')+'</label>');
+    const custom=customCourses.map(c=>'<div class="custom-check-row"><label class="check-item"><input type="checkbox" data-check-id="'+esc(c.id)+'"'+(done(c.id)?' checked':'')+' aria-label="'+esc(c.title)+'"><span class="check-copy"><strong>'+esc(c.title)+'</strong><small>'+esc(c.institution||'Curso personalizado')+(c.hours?' · '+esc(c.hours):'')+'</small></span>'+(done(c.id)?'<span class="done-pill">Feito</span>':'')+'</label><div class="course-item-actions"><button type="button" data-edit-id="'+esc(c.id)+'" aria-label="Editar '+esc(c.title)+'">Editar</button><button type="button" data-delete-id="'+esc(c.id)+'" aria-label="Excluir '+esc(c.title)+'">Excluir</button></div></div>');
+    $('checkItems').innerHTML=[...base,...custom].join('');
+    const total=items.length+customCourses.length, n=[...items.map(i=>i[0]),...customCourses.map(c=>c.id)].filter(done).length;
+    $('headCount').textContent=n+' de '+total;
+    $('headBar').style.width=(total?n/total*100:0)+'%';
+    $('tabCount').textContent=n+'/'+total;
+    $('checkPercent').textContent=(total?Math.round(n/total*100):0)+'%';
+    $('customCourseCount').textContent=customCourses.length?(customCourses.length+' curso(s) adicionado(s)'):'Personalize sua formação';
     $('checkItems').querySelectorAll('[data-check-id]').forEach(box=>box.addEventListener('change',()=>{
-      if(box.checked)checked.add(box.dataset.checkId); else checked.delete(box.dataset.checkId);
+      if(box.checked)checked.add(box.dataset.checkId);else checked.delete(box.dataset.checkId);
       put(key,{...get(key),completed:[...checked]});paint();
     }));
+    $('checkItems').querySelectorAll('[data-edit-id]').forEach(b=>b.addEventListener('click',()=>openCourse(b.dataset.editId)));
+    $('checkItems').querySelectorAll('[data-delete-id]').forEach(b=>b.addEventListener('click',()=>{
+      const c=customCourses.find(x=>x.id===b.dataset.deleteId);if(!c)return;
+      if(!confirm('Excluir o curso "'+c.title+'" da sua trilha e do currículo?'))return;
+      customCourses=customCourses.filter(x=>x.id!==c.id);checked.delete(c.id);
+      saveCourses();put(key,{...get(key),completed:[...checked]});paint();
+    }));
   }
-  const byLine = v => String(v||'').split(/\r?\n/).map(x=>x.trim()).filter(Boolean);
+    const byLine = v => String(v||'').split(/\r?\n/).map(x=>x.trim()).filter(Boolean);
   function cvModel() {
-    const education=['Tecnólogo em Análise e Desenvolvimento de Sistemas'+(profile.adsSchool?' — '+profile.adsSchool.trim():'')+(profile.adsYear?' ('+profile.adsYear.trim()+')':'')];
-    if(done('puc-finish'))education.push('Pós-graduação em Gestão da Qualidade, Controle e Auditoria — '+(profile.postSchool.trim()||'Instituição a informar')+' (concluída)');
-    else if(done('puc-enroll'))education.push('Pós-graduação em Gestão da Qualidade, Controle e Auditoria — '+(profile.postSchool.trim()||'Instituição a informar')+' (em andamento)');
+    const education=[];
+    if(String(profile.adsDegree||'').trim())education.push(profile.adsDegree.trim()+(profile.adsSchool?' — '+profile.adsSchool.trim():'')+(profile.adsYear?' ('+profile.adsYear.trim()+')':''));
+    const postName=String(profile.postDegree||'').trim();
+    if(postName && (done('puc-finish')||done('puc-enroll')))education.push(postName+' — '+(profile.postSchool.trim()||'Instituição a informar')+(done('puc-finish')?' (concluída)':' (em andamento)'));
+    education.push(...byLine(profile.manualEducation));
     const courses=[];
-    if(done('enap-finish'))courses.push('Análise e Melhoria de Processos — ENAP (curso concluído)');
-    if(done('power-bi'))courses.push('Power BI e Power Query — Microsoft Learn (trilha de estudos concluída)');
-    if(done('power-automate'))courses.push('Power Automate — Microsoft Learn (trilha de estudos concluída)');
-    if(done('auditor'))courses.push('Formação de Auditor Interno — '+(profile.auditorSchool.trim()||'Instituição a informar')+' (curso concluído)');
-    if(done('green-belt'))courses.push('Lean Six Sigma Green Belt — '+(profile.greenSchool.trim()||'Instituição a informar')+' (formação concluída)');
-    const cert=done('pl-300')?['Microsoft Certified: Power BI Data Analyst Associate (PL-300) — exame aprovado']:[];
-    return {name:profile.name.trim(),headline:profile.headline.trim(),contact:[profile.location,profile.email,profile.phone,profile.portfolio].map(v=>v.trim()).filter(Boolean),summary:profile.summary.trim(),exp:byLine(profile.experience),education,courses,cert};
+    const cert=byLine(profile.manualCertifications);
+    for(const [id] of builtInLabels) {
+      if(!done(id))continue;
+      const line=courseText(id,builtInDefaultText(id));
+      if(line){if(id==='pl-300')cert.push(line);else courses.push(line);}
+    }
+    for(const c of customCourses) {
+      if(!done(c.id))continue;
+      const entry=customCvText(c);
+      if(c.category==='education')education.push(entry);
+      else if(c.category==='certification')cert.push(entry);
+      else courses.push(entry);
+    }
+    return {name:String(profile.name||'').trim(),headline:String(profile.headline||'').trim(),contact:[profile.location,profile.email,profile.phone,profile.portfolio].map(v=>String(v||'').trim()).filter(Boolean),summary:String(profile.summary||'').trim(),exp:byLine(profile.experience),education,courses,cert,skills:byLine(profile.skills),languages:byLine(profile.languages),extrasTitle:String(profile.extrasTitle||'').trim(),extras:byLine(profile.extras)};
   }
-  function sect(title,list,bullets=false) {
+    function sect(title,list,bullets=false) {
     if(!list.length)return '';
     return '<section class="cv-section"><h3>'+esc(title)+'</h3>'+(bullets?'<ul>'+list.map(x=>'<li>'+esc(x)+'</li>').join('')+'</ul>':list.map(x=>'<p>'+esc(x)+'</p>').join(''))+'</section>';
   }
@@ -89,13 +150,16 @@
     if(out.length)out.push('');
     if(m.summary)out.push('RESUMO PROFISSIONAL',m.summary,'');
     if(m.exp.length)out.push('EXPERIÊNCIA E PROJETOS',...m.exp.map(x=>'• '+x),'');
-    out.push('FORMAÇÃO ACADÊMICA',...m.education.map(x=>'• '+x));
-    if(m.courses.length)out.push('','CURSOS E FORMAÇÕES COMPLEMENTARES',...m.courses.map(x=>'• '+x));
-    if(m.cert.length)out.push('','CERTIFICAÇÕES PROFISSIONAIS',...m.cert.map(x=>'• '+x));
+    if(m.education.length)out.push('FORMAÇÃO ACADÊMICA',...m.education.map(x=>'• '+x),'');
+    if(m.courses.length)out.push('CURSOS E FORMAÇÕES COMPLEMENTARES',...m.courses.map(x=>'• '+x),'');
+    if(m.cert.length)out.push('CERTIFICAÇÕES PROFISSIONAIS',...m.cert.map(x=>'• '+x),'');
+    if(m.skills.length)out.push('COMPETÊNCIAS E HABILIDADES',...m.skills.map(x=>'• '+x),'');
+    if(m.languages.length)out.push('IDIOMAS',...m.languages.map(x=>'• '+x),'');
+    if(m.extrasTitle&&m.extras.length)out.push(m.extrasTitle.toUpperCase(),...m.extras.map(x=>'• '+x),'');
     copyText=out.join('\n').trim();
-    $('cvPaper').innerHTML='<h2 class="cv-name">'+esc(m.name||'Seu nome')+'</h2>'+(m.headline?'<p class="cv-role">'+esc(m.headline)+'</p>':'')+(m.contact.length?'<p class="cv-contact">'+m.contact.map(esc).join(' · ')+'</p>':'')+sect('Resumo profissional',m.summary?[m.summary]:[])+sect('Experiência e projetos',m.exp,true)+sect('Formação acadêmica',m.education,true)+sect('Cursos e formações complementares',m.courses,true)+sect('Certificações profissionais',m.cert,true)+(!m.courses.length&&!m.cert.length&&!done('puc-enroll')&&!done('puc-finish')?'<p class="cv-placeholder">Ao concluir cursos ou iniciar a pós, suas conquistas aparecerão aqui.</p>':'');
+    $('cvPaper').innerHTML='<h2 class="cv-name">'+esc(m.name||'Seu nome')+'</h2>'+(m.headline?'<p class="cv-role">'+esc(m.headline)+'</p>':'')+(m.contact.length?'<p class="cv-contact">'+m.contact.map(esc).join(' · ')+'</p>':'')+sect('Resumo profissional',m.summary?[m.summary]:[])+sect('Experiência e projetos',m.exp,true)+sect('Formação acadêmica',m.education,true)+sect('Cursos e formações complementares',m.courses,true)+sect('Certificações profissionais',m.cert,true)+sect('Competências e habilidades',m.skills,true)+sect('Idiomas',m.languages,true)+(m.extrasTitle?sect(m.extrasTitle,m.extras,true):'')+(!m.courses.length&&!m.cert.length&&!done('puc-enroll')&&!done('puc-finish')?'<p class="cv-placeholder">Ao concluir cursos, suas conquistas aparecerão aqui.</p>':'');
   }
-  function paint(){paintChecklist();paintTimeline();paintCv();}
+    function paint(){paintChecklist();paintTimeline();paintCv();}
   function setTab(tab,skipHash=false) {
     for(const t of ['timeline','checklist']) {
       const active=t===tab, suffix=t==='timeline'?'Timeline':'Checklist';
@@ -121,6 +185,7 @@
   const dialog=$('profileDialog'),form=$('profileForm');
   $('editProfile').addEventListener('click',()=>{
     for(const name in defaults){const f=form.elements.namedItem(name);if(f)f.value=profile[name]||'';}
+    $('builtinCvTexts').innerHTML=builtInLabels.map(([id,label])=>'<label class="full">'+esc(label)+'<textarea data-cv-course="'+esc(id)+'" rows="2" maxlength="850">'+esc(courseText(id,builtInDefaultText(id)))+'</textarea></label>').join('');
     dialog.showModal();
   });
   $('closeProfile').addEventListener('click',()=>dialog.close());
@@ -128,9 +193,49 @@
   form.addEventListener('submit',e=>e.preventDefault());
   $('saveProfile').addEventListener('click',()=>{
     for(const name in defaults){const f=form.elements.namedItem(name);if(f)profile[name]=f.value;}
+    const texts={...(profile.courseTexts&&typeof profile.courseTexts==='object'?profile.courseTexts:{})};
+    $('builtinCvTexts').querySelectorAll('[data-cv-course]').forEach(f=>{
+      const val=f.value.trim(), defaultText=builtInDefaultText(f.dataset.cvCourse);
+      if(val===defaultText)delete texts[f.dataset.cvCourse];else texts[f.dataset.cvCourse]=val;
+    });
+    profile.courseTexts=texts;
     put(pk,{...get(pk),...profile,fullName:profile.name});
     dialog.close();paintCv();$('cvMessage').textContent='Dados atualizados neste navegador.';
   });
+  const courseDialog=$('courseDialog'),courseForm=$('courseForm');
+  let editingCourseId=null;
+  function openCourse(id=null) {
+    const course=id?customCourses.find(c=>c.id===id):null;
+    editingCourseId=course?course.id:null;
+    courseForm.reset();
+    for(const field of ['title','institution','category','when','hours','year','cost','url','cvText']){
+      const el=courseForm.elements.namedItem(field);if(el&&course)el.value=course[field]||'';
+    }
+    courseForm.elements.namedItem('completed').checked=!!(course&&done(course.id));
+    $('courseTitle').textContent=course?'Editar curso':'Adicionar curso';
+    courseDialog.showModal();
+    if(!course)courseForm.elements.namedItem('title').focus();
+  }
+  $('addCourse').addEventListener('click',()=>openCourse());
+  $('closeCourse').addEventListener('click',()=>courseDialog.close());
+  courseDialog.addEventListener('click',e=>{if(e.target===courseDialog)courseDialog.close();});
+  courseForm.addEventListener('submit',e=>{
+    e.preventDefault();
+    if(!courseForm.reportValidity())return;
+    const field=k=>courseForm.elements.namedItem(k).value.trim();
+    const url=field('url');
+    if(url&&!safeHref(url)){courseForm.elements.namedItem('url').setCustomValidity('Informe um endereço http ou https válido.');courseForm.reportValidity();return;}
+    courseForm.elements.namedItem('url').setCustomValidity('');
+    const id=editingCourseId||'custom-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,9);
+    const course=sanitizeCourse({id,...Object.fromEntries(['title','institution','category','when','hours','year','cost','url','cvText'].map(k=>[k,field(k)]))});
+    if(!course)return;
+    if(editingCourseId)customCourses=customCourses.map(c=>c.id===editingCourseId?course:c);
+    else customCourses.push(course);
+    if(courseForm.elements.namedItem('completed').checked)checked.add(id);else checked.delete(id);
+    saveCourses();put(key,{...get(key),completed:[...checked]});
+    courseDialog.close();paint();$('cvMessage').textContent='Curso salvo e integrado à sua trilha.';
+  });
+  courseForm.elements.namedItem('url').addEventListener('input',e=>e.target.setCustomValidity(''));
   $('copyCv').addEventListener('click',async()=>{
     try{
       if(navigator.clipboard?.writeText)await navigator.clipboard.writeText(copyText);
@@ -149,6 +254,7 @@
   window.addEventListener('storage',e=>{
     if(e.key===key){checked=new Set((Array.isArray(get(key).completed)?get(key).completed:[]).filter(x=>typeof x==='string'));paint();}
     if(e.key===pk){const p=get(pk);profile={...defaults,...p,name:p.name||p.fullName||''};paintCv();}
+    if(e.key===ck){customCourses=(Array.isArray(get(ck).courses)?get(ck).courses:[]).map(sanitizeCourse).filter(Boolean);paint();}
   });
   paint();
   setTab(location.hash==='#checklist'||location.hash==='#curriculo'?'checklist':'timeline',true);
