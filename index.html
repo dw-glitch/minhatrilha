@@ -41,12 +41,13 @@
 
       <section id="panelChecklist" class="panel checklist-panel" role="tabpanel" aria-labelledby="tabChecklist" hidden>
         <div class="check-col">
-          <div class="compact-heading"><div><h2>Minha checklist</h2><p>Marque apenas o que já realizou.</p></div><span id="checkPercent" class="percent">0%</span></div>
+          <div class="compact-heading"><div><h2>Minha checklist</h2><p>Marque os cursos concluídos e acrescente outros quando quiser.</p></div><span id="checkPercent" class="percent">0%</span></div>
+          <div class="course-toolbar"><button type="button" class="primary-button" id="addCourse">+ Adicionar curso</button><span id="customCourseCount" class="course-hint"></span></div>
           <div class="checks" id="checkItems"></div>
           <div class="check-footer"><span>✓ Salvo neste navegador</span><button type="button" id="resetChecks">Limpar marcações</button></div>
         </div>
         <div class="cv-col">
-          <div class="compact-heading cv-heading"><div><h2>Prévia do currículo</h2><p>Atualização automática a cada marcação</p></div><button type="button" class="outline-button" id="editProfile">Editar dados</button></div>
+          <div class="compact-heading cv-heading"><div><h2>Prévia do currículo</h2><p>Todos os campos editáveis, atualização automática</p></div><button type="button" class="outline-button" id="editProfile">Editar currículo</button></div>
           <div id="cvPaper" class="cv-paper" aria-live="polite" aria-relevant="additions text"></div>
           <div class="cv-buttons"><button type="button" class="primary-button" id="copyCv">Copiar currículo</button><button type="button" class="outline-button" id="printCv">Salvar em PDF</button></div>
           <p class="cv-message" id="cvMessage" role="status" aria-live="polite"></p>
@@ -58,23 +59,57 @@
 
   <dialog class="profile-dialog" id="profileDialog" aria-labelledby="profileTitle">
     <form method="dialog" id="profileForm">
-      <div class="dialog-head"><div><h2 id="profileTitle">Personalizar currículo</h2><p>Preencha apenas os dados que desejar mostrar.</p></div><button type="button" class="close-dialog" id="closeProfile" aria-label="Fechar">×</button></div>
+      <div class="dialog-head"><div><h2 id="profileTitle">Editar currículo completo</h2><p>Altere o conteúdo de cada seção. Campos em branco podem ser ocultados na prévia.</p></div><button type="button" class="close-dialog" id="closeProfile" aria-label="Fechar">×</button></div>
       <div class="fields">
+        <h3 class="field-section">Dados pessoais</h3>
         <label>Nome completo<input name="name" type="text" autocomplete="name" maxlength="100" placeholder="Seu nome"></label>
         <label>Cidade e estado<input name="location" type="text" maxlength="100" placeholder="Ex.: Recife, PE"></label>
         <label>E-mail profissional<input name="email" type="email" autocomplete="email" maxlength="160" placeholder="email@exemplo.com"></label>
         <label>Telefone<input name="phone" type="tel" autocomplete="tel" maxlength="40" placeholder="(81) 99999-9999"></label>
         <label class="full">Objetivo profissional<input name="headline" type="text" maxlength="140" placeholder="Qualidade | Processos | Transformação Digital"></label>
+        <h3 class="field-section">Formação acadêmica</h3>
+        <label class="full">Nome da graduação<input name="adsDegree" type="text" maxlength="180" placeholder="Ex.: Tecnólogo em Análise e Desenvolvimento de Sistemas"></label>
         <label>Instituição da graduação ADS<input name="adsSchool" type="text" maxlength="120" placeholder="Nome da faculdade"></label>
         <label>Ano de conclusão ADS<input name="adsYear" type="text" inputmode="numeric" maxlength="4" pattern="[0-9]{0,4}" placeholder="Ex.: 2025"></label>
+        <label class="full">Nome da pós-graduação<input name="postDegree" type="text" maxlength="180"></label>
         <label>Instituição da pós<input name="postSchool" type="text" maxlength="120"></label>
         <label>Instituição da auditoria<input name="auditorSchool" type="text" maxlength="120" placeholder="Target-Q ou Bureau Veritas"></label>
         <label>Instituição Green Belt<input name="greenSchool" type="text" maxlength="120"></label>
+        <label class="full">Outras formações acadêmicas (uma por linha)<textarea name="manualEducation" rows="3" maxlength="3500" placeholder="Ex.: Técnico em Qualidade — Instituição — 2024"></textarea></label>
+        <h3 class="field-section">Perfil e experiência</h3>
         <label>LinkedIn ou portfólio<input name="portfolio" type="text" maxlength="180" placeholder="linkedin.com/in/... "></label>
         <label class="full">Resumo profissional<textarea name="summary" rows="3" maxlength="1300"></textarea></label>
-        <label class="full">Experiência e projetos (uma linha por item)<textarea name="experience" rows="4" maxlength="2500" placeholder="Ex.: Controle e rastreabilidade documental"></textarea></label>
+        <label class="full">Experiência profissional e projetos (uma linha por item)<textarea name="experience" rows="4" maxlength="5000" placeholder="Ex.: Cargo — Empresa — Período | Atividades e resultados"></textarea></label>
+        <label class="full">Competências e habilidades (uma por linha)<textarea name="skills" rows="3" maxlength="2200" placeholder="Ex.: Gestão documental"></textarea></label>
+        <label class="full">Idiomas (um por linha)<textarea name="languages" rows="2" maxlength="1400" placeholder="Ex.: Inglês — Intermediário"></textarea></label>
+        <h3 class="field-section">Certificações e outras informações</h3>
+        <label class="full">Certificações independentes (uma por linha)<textarea name="manualCertifications" rows="3" maxlength="2500" placeholder="Ex.: Certificação XYZ — Emissor — 2026"></textarea></label>
+        <label class="full">Título de uma seção adicional<input name="extrasTitle" type="text" maxlength="100" placeholder="Ex.: Voluntariado, Publicações, Prêmios"></label>
+        <label class="full">Itens da seção adicional (uma linha por item)<textarea name="extras" rows="3" maxlength="2500"></textarea></label>
+        <h3 class="field-section">Textos das conquistas da trilha</h3>
+        <p class="field-helper">Personalize exatamente como cada curso concluído aparecerá no currículo. Deixe em branco para não exibir. Eles só entram quando marcados como concluídos.</p>
+        <div id="builtinCvTexts" class="builtin-cv-texts"></div>
       </div>
       <div class="dialog-actions"><span>Salvo somente neste dispositivo.</span><button type="button" class="primary-button" id="saveProfile">Salvar alterações</button></div>
+    </form>
+  </dialog>
+
+  <dialog class="profile-dialog course-dialog" id="courseDialog" aria-labelledby="courseTitle">
+    <form id="courseForm">
+      <div class="dialog-head"><div><h2 id="courseTitle">Adicionar curso</h2><p>Inclua na sua checklist e escolha como aparecerá no currículo.</p></div><button type="button" class="close-dialog" id="closeCourse" aria-label="Fechar">×</button></div>
+      <div class="fields">
+        <label class="full">Nome do curso ou formação *<input name="title" type="text" maxlength="180" required placeholder="Ex.: Fundamentos de Gestão da Qualidade"></label>
+        <label>Instituição / emissor<input name="institution" type="text" maxlength="150" placeholder="Ex.: ENAP"></label>
+        <label>Categoria<select name="category"><option value="course">Curso complementar</option><option value="certification">Certificação profissional</option><option value="education">Formação acadêmica</option></select></label>
+        <label>Quando / período<input name="when" type="text" maxlength="100" placeholder="Ex.: Out/2026"></label>
+        <label>Carga horária<input name="hours" type="text" maxlength="40" placeholder="Ex.: 20 horas"></label>
+        <label>Ano<input name="year" type="text" maxlength="20" placeholder="Ex.: 2026"></label>
+        <label>Investimento (opcional)<input name="cost" type="text" maxlength="100" placeholder="Ex.: Gratuito"></label>
+        <label class="full">Link do curso<input name="url" type="url" maxlength="500" placeholder="https://..."></label>
+        <label class="full">Texto exato para o currículo (opcional)<textarea name="cvText" rows="3" maxlength="850" placeholder="Se vazio, será criado com nome, instituição, horas e ano."></textarea></label>
+        <label class="course-completed full"><input name="completed" type="checkbox"> Este curso já foi concluído</label>
+      </div>
+      <div class="dialog-actions"><span>Os cursos são salvos neste navegador.</span><button type="submit" class="primary-button">Salvar curso</button></div>
     </form>
   </dialog>
 </body>
