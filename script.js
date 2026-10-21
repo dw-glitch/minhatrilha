@@ -37,7 +37,7 @@
     name:'',location:'',email:'',phone:'',headline:'Qualidade | Processos | Transformação Digital',
     adsDegree:'Tecnólogo em Análise e Desenvolvimento de Sistemas',adsSchool:'',adsYear:'',postDegree:'Pós-graduação em Gestão da Qualidade, Controle e Auditoria',postSchool:'PUC Minas',auditorSchool:'',greenSchool:'FM2S',portfolio:'',
     summary:'Profissional formado em Análise e Desenvolvimento de Sistemas, com experiência em controle documental e rotinas da Qualidade Industrial e interesse em análise de dados, melhoria contínua e transformação digital.',
-    experience:'',manualEducation:'',skills:'',languages:'',manualCertifications:'',extrasTitle:'',extras:''
+    experience:'',manualEducation:'',skills:'',languages:'',manualCertifications:'',extrasTitle:'',extras:'',sectionSummary:'Resumo profissional',sectionExperience:'Experiência e projetos',sectionEducation:'Formação acadêmica',sectionCourses:'Cursos e formações complementares',sectionCertifications:'Certificações profissionais',sectionSkills:'Competências e habilidades',sectionLanguages:'Idiomas'
   };
   const old = get(pk);
   let profile = {...defaults,...old,name:old.name||old.fullName||''};
@@ -144,20 +144,21 @@
   }
   function paintCv() {
     const m=cvModel(), out=[];
+    const title=k=>String(profile[k]||'').trim();
     if(m.name)out.push(m.name.toUpperCase());
     if(m.headline)out.push(m.headline);
     if(m.contact.length)out.push(m.contact.join(' | '));
     if(out.length)out.push('');
-    if(m.summary)out.push('RESUMO PROFISSIONAL',m.summary,'');
-    if(m.exp.length)out.push('EXPERIÊNCIA E PROJETOS',...m.exp.map(x=>'• '+x),'');
-    if(m.education.length)out.push('FORMAÇÃO ACADÊMICA',...m.education.map(x=>'• '+x),'');
-    if(m.courses.length)out.push('CURSOS E FORMAÇÕES COMPLEMENTARES',...m.courses.map(x=>'• '+x),'');
-    if(m.cert.length)out.push('CERTIFICAÇÕES PROFISSIONAIS',...m.cert.map(x=>'• '+x),'');
-    if(m.skills.length)out.push('COMPETÊNCIAS E HABILIDADES',...m.skills.map(x=>'• '+x),'');
-    if(m.languages.length)out.push('IDIOMAS',...m.languages.map(x=>'• '+x),'');
+    if(m.summary)out.push(title('sectionSummary').toUpperCase(),m.summary,'');
+    if(m.exp.length)out.push(title('sectionExperience').toUpperCase(),...m.exp.map(x=>'• '+x),'');
+    if(m.education.length)out.push(title('sectionEducation').toUpperCase(),...m.education.map(x=>'• '+x),'');
+    if(m.courses.length)out.push(title('sectionCourses').toUpperCase(),...m.courses.map(x=>'• '+x),'');
+    if(m.cert.length)out.push(title('sectionCertifications').toUpperCase(),...m.cert.map(x=>'• '+x),'');
+    if(m.skills.length)out.push(title('sectionSkills').toUpperCase(),...m.skills.map(x=>'• '+x),'');
+    if(m.languages.length)out.push(title('sectionLanguages').toUpperCase(),...m.languages.map(x=>'• '+x),'');
     if(m.extrasTitle&&m.extras.length)out.push(m.extrasTitle.toUpperCase(),...m.extras.map(x=>'• '+x),'');
     copyText=out.join('\n').trim();
-    $('cvPaper').innerHTML='<h2 class="cv-name">'+esc(m.name||'Seu nome')+'</h2>'+(m.headline?'<p class="cv-role">'+esc(m.headline)+'</p>':'')+(m.contact.length?'<p class="cv-contact">'+m.contact.map(esc).join(' · ')+'</p>':'')+sect('Resumo profissional',m.summary?[m.summary]:[])+sect('Experiência e projetos',m.exp,true)+sect('Formação acadêmica',m.education,true)+sect('Cursos e formações complementares',m.courses,true)+sect('Certificações profissionais',m.cert,true)+sect('Competências e habilidades',m.skills,true)+sect('Idiomas',m.languages,true)+(m.extrasTitle?sect(m.extrasTitle,m.extras,true):'')+(!m.courses.length&&!m.cert.length&&!done('puc-enroll')&&!done('puc-finish')?'<p class="cv-placeholder">Ao concluir cursos, suas conquistas aparecerão aqui.</p>':'');
+    $('cvPaper').innerHTML='<h2 class="cv-name">'+esc(m.name||'Seu nome')+'</h2>'+(m.headline?'<p class="cv-role">'+esc(m.headline)+'</p>':'')+(m.contact.length?'<p class="cv-contact">'+m.contact.map(esc).join(' · ')+'</p>':'')+sect(title('sectionSummary'),m.summary?[m.summary]:[])+sect(title('sectionExperience'),m.exp,true)+sect(title('sectionEducation'),m.education,true)+sect(title('sectionCourses'),m.courses,true)+sect(title('sectionCertifications'),m.cert,true)+sect(title('sectionSkills'),m.skills,true)+sect(title('sectionLanguages'),m.languages,true)+(m.extrasTitle?sect(m.extrasTitle,m.extras,true):'')+(!m.courses.length&&!m.cert.length&&!done('puc-enroll')&&!done('puc-finish')?'<p class="cv-placeholder">Ao concluir cursos, suas conquistas aparecerão aqui.</p>':'');
   }
     function paint(){paintChecklist();paintTimeline();paintCv();}
   function setTab(tab,skipHash=false) {
@@ -245,6 +246,41 @@
       }
       $('cvMessage').textContent='Currículo copiado. Revise os dados antes de enviar.';
     }catch{$('cvMessage').textContent='Cópia bloqueada. Use Salvar em PDF para obter o currículo.';}
+  });
+  $('backupData').addEventListener('click',()=>{
+    const payload={version:1,exportedAt:new Date().toISOString(),profile:{...profile},completed:[...checked],courses:customCourses};
+    const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
+    const address=URL.createObjectURL(blob),anchor=document.createElement('a');
+    anchor.href=address;anchor.download='minha-trilha-backup-'+new Date().toISOString().slice(0,10)+'.json';
+    document.body.appendChild(anchor);anchor.click();anchor.remove();
+    setTimeout(()=>URL.revokeObjectURL(address),1000);
+    $('cvMessage').textContent='Backup criado. Guarde o arquivo para restaurar suas informações.';
+  });
+  $('restoreData').addEventListener('click',()=>$('backupFile').click());
+  $('backupFile').addEventListener('change',async e=>{
+    const file=e.target.files?.[0];if(!file)return;
+    try {
+      if(file.size>1024*1024)throw Error('Arquivo excede o limite de 1 MB.');
+      const parsed=JSON.parse(await file.text());
+      if(!parsed||parsed.version!==1||!Array.isArray(parsed.completed)||!Array.isArray(parsed.courses)||typeof parsed.profile!=='object'||!parsed.profile||Array.isArray(parsed.profile))throw Error('Este arquivo não é um backup válido do Minha Trilha.');
+      if(parsed.courses.length>500)throw Error('Arquivo contém cursos em excesso.');
+      if(!confirm('Restaurar este backup? As marcações, cursos e o currículo salvos neste navegador serão substituídos.'))return;
+      const fresh={...defaults};
+      for(const k of Object.keys(defaults))if(typeof parsed.profile[k]==='string')fresh[k]=parsed.profile[k].slice(0,6000);
+      const rawTexts=parsed.profile.courseTexts;
+      if(rawTexts&&typeof rawTexts==='object'&&!Array.isArray(rawTexts)){
+        fresh.courseTexts={};
+        for(const [id] of builtInLabels)if(typeof rawTexts[id]==='string')fresh.courseTexts[id]=rawTexts[id].slice(0,850);
+      }
+      const seen=new Set;
+      customCourses=parsed.courses.map(sanitizeCourse).filter(c=>{if(!c||seen.has(c.id))return false;seen.add(c.id);return true;});
+      const ids=new Set([...items.map(i=>i[0]),...customCourses.map(c=>c.id)]);
+      checked=new Set(parsed.completed.filter(id=>typeof id==='string'&&ids.has(id)));
+      profile=fresh;
+      put(pk,{...profile,fullName:profile.name});put(ck,{courses:customCourses});put(key,{...get(key),completed:[...checked]});
+      paint();$('cvMessage').textContent='Backup restaurado com sucesso.';
+    }catch(error){$('cvMessage').textContent='Não foi possível restaurar: '+error.message;}
+    finally{e.target.value='';}
   });
   $('printCv').addEventListener('click',()=>{
     document.body.classList.add('print-cv');window.print();
