@@ -49,7 +49,7 @@
         <div class="cv-col">
           <div class="compact-heading cv-heading"><div><h2>Prévia do currículo</h2><p>Todos os campos editáveis, atualização automática</p></div><button type="button" class="outline-button" id="editProfile">Editar currículo</button></div>
           <div id="cvPaper" class="cv-paper" aria-live="polite" aria-relevant="additions text"></div>
-          <div class="cv-buttons"><button type="button" class="primary-button" id="copyCv">Copiar currículo</button><button type="button" class="outline-button" id="printCv">Salvar em PDF</button></div>
+          <div class="cv-buttons"><button type="button" class="primary-button" id="copyCv">Copiar currículo</button><button type="button" class="outline-button" id="printCv">Salvar em PDF</button><button type="button" class="outline-button" id="backupData">Baixar backup</button><button type="button" class="outline-button" id="restoreData">Restaurar backup</button><input id="backupFile" type="file" accept="application/json,.json" hidden></div>
           <p class="cv-message" id="cvMessage" role="status" aria-live="polite"></p>
         </div>
       </section>
@@ -86,11 +86,19 @@
         <label class="full">Certificações independentes (uma por linha)<textarea name="manualCertifications" rows="3" maxlength="2500" placeholder="Ex.: Certificação XYZ — Emissor — 2026"></textarea></label>
         <label class="full">Título de uma seção adicional<input name="extrasTitle" type="text" maxlength="100" placeholder="Ex.: Voluntariado, Publicações, Prêmios"></label>
         <label class="full">Itens da seção adicional (uma linha por item)<textarea name="extras" rows="3" maxlength="2500"></textarea></label>
+        <h3 class="field-section">Títulos das seções do currículo</h3>
+        <label>Resumo<input name="sectionSummary" type="text" maxlength="90"></label>
+        <label>Experiência<input name="sectionExperience" type="text" maxlength="90"></label>
+        <label>Formação acadêmica<input name="sectionEducation" type="text" maxlength="90"></label>
+        <label>Cursos<input name="sectionCourses" type="text" maxlength="90"></label>
+        <label>Certificações<input name="sectionCertifications" type="text" maxlength="90"></label>
+        <label>Competências<input name="sectionSkills" type="text" maxlength="90"></label>
+        <label>Idiomas<input name="sectionLanguages" type="text" maxlength="90"></label>
         <h3 class="field-section">Textos das conquistas da trilha</h3>
         <p class="field-helper">Personalize exatamente como cada curso concluído aparecerá no currículo. Deixe em branco para não exibir. Eles só entram quando marcados como concluídos.</p>
         <div id="builtinCvTexts" class="builtin-cv-texts"></div>
       </div>
-      <div class="dialog-actions"><span>Salvo somente neste dispositivo.</span><button type="button" class="primary-button" id="saveProfile">Salvar alterações</button></div>
+      <div class="dialog-actions"><span>Salvo neste navegador. Use o backup para transferir seus dados.</span><button type="button" class="primary-button" id="saveProfile">Salvar alterações</button></div>
     </form>
   </dialog>
 
